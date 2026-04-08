@@ -2860,7 +2860,9 @@
             <div class="dcl-envelope" id="dclEnvelope" onclick="openEnvelope()">
                 <div class="dcl-env-body">
                     <div class="dcl-env-flap"></div>
-                    <div class="dcl-seal-wrap"><div class="dcl-seal">💛</div></div>
+                    <div class="dcl-seal-wrap">
+                        <div class="dcl-seal">💛</div>
+                    </div>
 
                     <!-- Letter inside -->
                     <div class="dcl-letter-inner" id="dclLetterInner">
@@ -3178,7 +3180,7 @@
                     osc.start(now + 0.3 + i * 0.07);
                     osc.stop(now + 2);
                 });
-            } catch(e) {}
+            } catch (e) { }
         }
 
         function spawnGoldParticles() {
@@ -3186,7 +3188,7 @@
             const rect = wrap.getBoundingClientRect();
             const cx = rect.left + rect.width / 2;
             const cy = rect.top + 80;
-            const emojis = ['✨','💛','⭐','🌟','💫','✦'];
+            const emojis = ['✨', '💛', '⭐', '🌟', '💫', '✦'];
             for (let i = 0; i < 38; i++) {
                 setTimeout(() => {
                     const p = document.createElement('div');
@@ -3200,8 +3202,8 @@
                         position:fixed; left:${cx}px; top:${cy}px;
                         font-size:${size}rem; pointer-events:none; z-index:9998;
                         transform:translate(-50%,-50%);
-                        transition: transform ${0.7 + Math.random()*0.6}s cubic-bezier(.2,.8,.4,1),
-                                    opacity ${0.5 + Math.random()*0.5}s ease ${0.4 + Math.random()*0.3}s;
+                        transition: transform ${0.7 + Math.random() * 0.6}s cubic-bezier(.2,.8,.4,1),
+                                    opacity ${0.5 + Math.random() * 0.5}s ease ${0.4 + Math.random() * 0.3}s;
                         opacity:1;
                     `;
                     document.body.appendChild(p);
@@ -3296,113 +3298,115 @@
 
     <!-- ═══════════ DECLARAR AUDIO SEQUENCER ═══════════ -->
     <script>
-    const dclSeq = (() => {
-        // ── Playlist con tiempos globales (segundos) ──
-        const tracks = [
-            { file: '1teesperaba.mp3',       start: 0,    end: 45,   from: 0,    fadeIn: 3,  fadeOut: 3,  vol: 0.25 },
-            { file: '2creoenti.mp3',          start: 43,   end: 90,   from: 0,    fadeIn: 4,  fadeOut: 3,  vol: 0.30 },
-            { file: '3vasaquedarte.mp3',       start: 87,   end: 135,  from: 30,   fadeIn: 4,  fadeOut: 3,  vol: 0.30 },
-            { file: '4eresmia.mp3',            start: 132,  end: 180,  from: 0,    fadeIn: 4,  fadeOut: 3,  vol: 0.25 },
-            { file: 'caritalinda.mp3',         start: 177,  end: 235,  from: 15,   fadeIn: 4,  fadeOut: 4,  vol: 0.35 },
-            { file: '6antesdeti.mp3',          start: 231,  end: 275,  from: 0,    fadeIn: 5,  fadeOut: 3,  vol: 0.20 },
-            { file: 'beso.mp3',                start: 272,  end: 315,  from: 0,    fadeIn: 3,  fadeOut: 3,  vol: 0.22 },
-            { file: '7teregalo.mp3',           start: 312,  end: 355,  from: 0,    fadeIn: 4,  fadeOut: 3,  vol: 0.25 },
-            { file: '8propuestaindecente.mp3', start: 352,  end: 395,  from: 0,    fadeIn: 3,  fadeOut: 3,  vol: 0.28 },
-            { file: '9arroyito.mp3',           start: 392,  end: 420,  from: 0,    fadeIn: 3,  fadeOut: 5,  vol: 0.20 }
-        ];
+        const dclSeq = (() => {
+            // ── Playlist con tiempos globales (segundos) ──
+            const tracks = [
+                { file: '1teesperaba.mp3', start: 0, end: 45, from: 64, fadeIn: 3, fadeOut: 3, vol: 0.25 },
+                { file: '2creoenti.mp3', start: 43, end: 90, from: 56, fadeIn: 4, fadeOut: 3, vol: 0.30 },
+                { file: '3vasaquedarte.mp3', start: 87, end: 135, from: 58, fadeIn: 4, fadeOut: 3, vol: 0.30 },
+                { file: '4eresmia.mp3', start: 132, end: 180, from: 71, fadeIn: 4, fadeOut: 3, vol: 0.25 },
+                { file: '5caritalinda.mp3', start: 177, end: 235, from: 56, fadeIn: 4, fadeOut: 4, vol: 0.35 },
+                { file: '6antesdeti.mp3', start: 231, end: 275, from: 58, fadeIn: 5, fadeOut: 3, vol: 0.20 },
+                { file: 'beso.mp3', start: 272, end: 315, from: 38, fadeIn: 3, fadeOut: 3, vol: 0.22 },
+                { file: '7teregalo.mp3', start: 312, end: 355, from: 66, fadeIn: 4, fadeOut: 3, vol: 0.25 },
+                { file: '8propuestaindecente.mp3', start: 352, end: 395, from: 67, fadeIn: 3, fadeOut: 3, vol: 0.28 },
+                { file: '9arroyito.mp3', start: 392, end: 420, from: 52, fadeIn: 3, fadeOut: 5, vol: 0.20 }
+            ];
 
-        let nodes = [];   // { audio, gainNode, ctx, track, timer }
-        let globalTimer = null;
-        let globalTime = 0;
-        let tickInterval = null;
-        let running = false;
+            let nodes = [];   // { audio, track, fadeTimer, endTimer, startTimer }
+            let globalTime = 0;
+            let tickInterval = null;
+            let running = false;
 
-        function createNode(track) {
-            const audio = new Audio(track.file);
-            audio.currentTime = track.from;
-            audio.volume = 0;
-            audio.preload = 'auto';
-            return audio;
-        }
+            function createNode(track) {
+                const audio = new Audio(track.file);
+                audio.volume = 0;
+                audio.preload = 'auto';
+                // currentTime sólo funciona después de que el audio cargó sus metadatos
+                audio.addEventListener('loadedmetadata', () => {
+                    audio.currentTime = track.from;
+                }, { once: true });
+                return audio;
+            }
 
-        function fadeVolume(audio, fromVol, toVol, durationMs) {
-            const steps = 40;
-            const interval = durationMs / steps;
-            const delta = (toVol - fromVol) / steps;
-            let current = fromVol;
-            let count = 0;
-            const timer = setInterval(() => {
-                count++;
-                current += delta;
-                audio.volume = Math.max(0, Math.min(1, current));
-                if (count >= steps) clearInterval(timer);
-            }, interval);
-            return timer;
-        }
+            function fadeVolume(audio, fromVol, toVol, durationMs) {
+                const steps = 40;
+                const interval = durationMs / steps;
+                const delta = (toVol - fromVol) / steps;
+                let current = fromVol;
+                let count = 0;
+                const timer = setInterval(() => {
+                    count++;
+                    current += delta;
+                    audio.volume = Math.max(0, Math.min(1, current));
+                    if (count >= steps) clearInterval(timer);
+                }, interval);
+                return timer;
+            }
 
-        function scheduleTrack(track) {
-            const delay = (track.start - globalTime) * 1000;
-            if (delay < -((track.end - track.start) * 1000)) return; // ya pasó
+            function scheduleTrack(track) {
+                const delay = (track.start - globalTime) * 1000;
+                if (delay < -((track.end - track.start) * 1000)) return; // ya pasó
 
-            const audio = createNode(track);
-            const node = { audio, track, fadeTimer: null, endTimer: null, startTimer: null };
-            nodes.push(node);
+                const audio = createNode(track);
+                const node = { audio, track, fadeTimer: null, endTimer: null, startTimer: null };
+                nodes.push(node);
 
-            node.startTimer = setTimeout(() => {
-                if (!running) return;
-                audio.play().catch(() => {});
-                // Fade in
-                fadeVolume(audio, 0, track.vol, track.fadeIn * 1000);
-
-                // Fade out antes del fin
-                const dur = (track.end - track.start) * 1000;
-                const fadeOutStart = dur - track.fadeOut * 1000;
-                node.fadeTimer = setTimeout(() => {
+                node.startTimer = setTimeout(() => {
                     if (!running) return;
-                    fadeVolume(audio, track.vol, 0, track.fadeOut * 1000);
-                }, fadeOutStart);
+                    audio.play().catch(() => { });
+                    // Fade in
+                    fadeVolume(audio, 0, track.vol, track.fadeIn * 1000);
 
-                // Stop al final
-                node.endTimer = setTimeout(() => {
-                    audio.pause();
-                    audio.src = '';
-                }, dur + 200);
+                    // Fade out antes del fin
+                    const dur = (track.end - track.start) * 1000;
+                    const fadeOutStart = dur - track.fadeOut * 1000;
+                    node.fadeTimer = setTimeout(() => {
+                        if (!running) return;
+                        fadeVolume(audio, track.vol, 0, track.fadeOut * 1000);
+                    }, fadeOutStart);
 
-            }, Math.max(0, delay));
-        }
+                    // Stop al final
+                    node.endTimer = setTimeout(() => {
+                        audio.pause();
+                        audio.src = '';
+                    }, dur + 200);
 
-        function tick() {
-            globalTime += 0.25;
-        }
+                }, Math.max(0, delay));
+            }
 
-        function start() {
-            if (running) return;
-            running = true;
-            globalTime = 0;
-            nodes = [];
+            function tick() {
+                globalTime += 0.25;
+            }
 
-            tracks.forEach(t => scheduleTrack(t));
-            tickInterval = setInterval(tick, 250);
-        }
+            function start() {
+                if (running) return;
+                running = true;
+                globalTime = 0;
+                nodes = [];
 
-        function stop() {
-            if (!running) return;
-            running = false;
-            clearInterval(tickInterval);
-            nodes.forEach(n => {
-                clearTimeout(n.startTimer);
-                clearTimeout(n.fadeTimer);
-                clearTimeout(n.endTimer);
-                try {
-                    fadeVolume(n.audio, n.audio.volume, 0, 800);
-                    setTimeout(() => { n.audio.pause(); n.audio.src = ''; }, 900);
-                } catch(e) {}
-            });
-            nodes = [];
-        }
+                tracks.forEach(t => scheduleTrack(t));
+                tickInterval = setInterval(tick, 250);
+            }
 
-        return { start, stop };
-    })();
+            function stop() {
+                if (!running) return;
+                running = false;
+                clearInterval(tickInterval);
+                nodes.forEach(n => {
+                    clearTimeout(n.startTimer);
+                    clearTimeout(n.fadeTimer);
+                    clearTimeout(n.endTimer);
+                    try {
+                        fadeVolume(n.audio, n.audio.volume, 0, 800);
+                        setTimeout(() => { n.audio.pause(); n.audio.src = ''; }, 900);
+                    } catch (e) { }
+                });
+                nodes = [];
+            }
+
+            return { start, stop };
+        })();
     </script>
 
     <!-- ═══════════ QUEST ═══════════ -->

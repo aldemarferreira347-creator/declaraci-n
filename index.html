@@ -1569,6 +1569,115 @@
         .btn-entrar:hover::before {
             left: 100%;
         }
+
+        /* ─── VISITAS COUNTER CARD ─── */
+        .visit-card {
+            background: linear-gradient(145deg, rgba(20, 0, 40, 0.7), rgba(10, 5, 25, 0.85));
+            border: 1px solid rgba(245, 197, 24, 0.35);
+            border-radius: 20px;
+            padding: 30px 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), 0 0 30px rgba(245, 197, 24, 0.08);
+            /* igual que .nav-card para encajar en el grid */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+            cursor: default;
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+            /* hereda columna del grid padre .main-nav */
+            min-width: 0;
+        }
+
+        .visit-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 50% 120%, rgba(245, 197, 24, 0.12) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .visit-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 18px 45px rgba(245, 197, 24, 0.25);
+        }
+
+        .visit-icon {
+            font-size: 2.4rem;
+            filter: drop-shadow(0 3px 8px rgba(245, 197, 24, 0.5));
+            animation: pulse 2.5s ease-in-out infinite;
+        }
+
+        .visit-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            color: var(--gold2);
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .visit-number {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2.8rem;
+            font-weight: 700;
+            line-height: 1;
+            background: linear-gradient(135deg, var(--gold2), var(--amber), #fff9c4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: none;
+            filter: drop-shadow(0 2px 10px rgba(255, 200, 50, 0.4));
+            animation: numPulse 3s ease-in-out infinite;
+            min-width: 60px;
+            display: inline-block;
+        }
+
+        @keyframes numPulse {
+            0%, 100% { filter: drop-shadow(0 2px 10px rgba(255, 200, 50, 0.3)); }
+            50% { filter: drop-shadow(0 2px 18px rgba(255, 200, 50, 0.7)); }
+        }
+
+        .visit-label {
+            font-size: 0.72rem;
+            color: rgba(255, 215, 0, 0.65);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+
+        .visit-dots {
+            display: flex;
+            gap: 5px;
+            margin-top: 4px;
+        }
+
+        .visit-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--gold);
+            opacity: 0.4;
+            animation: dotBlink 1.4s ease-in-out infinite;
+        }
+
+        .visit-dot:nth-child(1) { animation-delay: 0s; }
+        .visit-dot:nth-child(2) { animation-delay: 0.2s; }
+        .visit-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes dotBlink {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.4); }
+        }
+
+        .visit-loading-num {
+            font-size: 1rem;
+            color: var(--gold);
+            animation: dotBlink 0.8s ease-in-out infinite;
+        }
     </style>
 </head>
 
@@ -1623,6 +1732,21 @@
                 <span class="nav-icon">💛</span>
                 <span class="nav-title">La Pregunta</span>
                 <span class="nav-desc">Algo que lleva mucho tiempo esperando ser dicho.</span>
+            </div>
+
+            <!-- 👁 CONTADOR DE VISITAS -->
+            <div class="visit-card" id="visitCard">
+                <span class="visit-icon">👁️</span>
+                <span class="visit-title">Visitas</span>
+                <span class="visit-number" id="visitCount">
+                    <span class="visit-loading-num">···</span>
+                </span>
+                <span class="visit-label">veces que has entrado</span>
+                <div class="visit-dots">
+                    <span class="visit-dot"></span>
+                    <span class="visit-dot"></span>
+                    <span class="visit-dot"></span>
+                </div>
             </div>
         </div>
     </section>
@@ -4762,6 +4886,60 @@
             window.stopSpecialFlower = function () {
                 if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null; }
             };
+        })();
+    </script>
+
+    <!-- ═══ CONTADOR DE VISITAS ═══ -->
+    <script>
+        (function () {
+            // Contador compartido entre TODOS los usuarios via counterapi.dev (gratuito, sin cuenta)
+            // Namespace único para esta página
+            const NAMESPACE    = 'isa-regalo-2026';
+            const KEY          = 'visitas';
+            const API_HIT      = `https://api.counterapi.dev/v1/${NAMESPACE}/${KEY}/up`;
+            const LS_CACHE_KEY = 'visit_global_cache';
+
+            const countEl = document.getElementById('visitCount');
+
+            /* Muestra el número con animación pop */
+            function renderCount(n) {
+                if (!countEl) return;
+                countEl.innerHTML = '';
+                const num = document.createElement('span');
+                num.textContent = n;
+                countEl.appendChild(num);
+                countEl.style.transition = 'transform 0.5s cubic-bezier(.175,.885,.32,1.275)';
+                countEl.style.transform  = 'scale(1.6)';
+                setTimeout(() => { countEl.style.transform = 'scale(1)'; }, 500);
+            }
+
+            async function initCounter() {
+                // Mostrar inmediatamente el último valor conocido mientras carga la API
+                const cached = parseInt(localStorage.getItem(LS_CACHE_KEY) || '0');
+                if (cached > 0) renderCount(cached);
+
+                try {
+                    // Llama a la API — cada llamada es +1 (cualquier usuario, cualquier visita)
+                    const res = await fetch(API_HIT, { mode: 'cors' });
+                    if (!res.ok) throw new Error('API error ' + res.status);
+                    const data = await res.json();
+                    // counterapi.dev devuelve { count: N } o { value: N }
+                    const count = data.count ?? data.value ?? (cached + 1);
+                    localStorage.setItem(LS_CACHE_KEY, count);
+                    renderCount(count);
+                } catch (e) {
+                    // Sin internet o API caída → usar fallback local
+                    const fallback = cached + 1;
+                    localStorage.setItem(LS_CACHE_KEY, fallback);
+                    renderCount(fallback);
+                }
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initCounter);
+            } else {
+                initCounter();
+            }
         })();
     </script>
 </body>
